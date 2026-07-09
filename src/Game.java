@@ -13,7 +13,7 @@ public class Game {
     private JTextField guessText;
 
     public Game(){
-        startNewGame();
+//        startNewGame();
 
         JFrame frame = new JFrame("CloudExify Guessing Game");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -24,6 +24,11 @@ public class Game {
         panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
         panel.setVisible(true);
 
+        JPanel levelPanel = new JPanel();
+        levelPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        levelPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        levelPanel.setMaximumSize(new Dimension(500,100));
+
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new FlowLayout());
         inputPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -31,6 +36,28 @@ public class Game {
         JLabel titleLabel =  new JLabel("CloudExify Guessing Game");
         titleLabel.setFont(new Font(titleLabel.getFont().getFontName(),Font.BOLD,16));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JRadioButton easyBtn = new JRadioButton("Easy");
+        JRadioButton mediumBtn = new JRadioButton("Medium");
+        JRadioButton hardBtn = new JRadioButton("Hard");
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(easyBtn);
+        buttonGroup.add(mediumBtn);
+        buttonGroup.add(hardBtn);
+        JButton startButton = new JButton("Start Game");
+        startButton.addActionListener(e -> {
+            if(easyBtn.isSelected()){
+                range=100;
+            }else if(mediumBtn.isSelected()){
+                range=500;
+            }else if(hardBtn.isSelected()){
+                range=1000;
+            }else{
+                resultLabel.setForeground(Color.RED);
+                resultLabel.setText("You need to select difficulty level to start the game!");
+                return;
+            }
+            startNewGame();
+        });
         resultLabel = new JLabel("");
         resultLabel.setFont(new Font(resultLabel.getFont().getFontName(),Font.BOLD,16));
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -57,6 +84,11 @@ public class Game {
         });
 
         panel.add(titleLabel);
+        levelPanel.add(easyBtn);
+        levelPanel.add(mediumBtn);
+        levelPanel.add(hardBtn);
+        panel.add(levelPanel);
+        panel.add(startButton);
         panel.add(resultLabel);
 
         inputPanel.add(messageLabel);
@@ -79,18 +111,18 @@ public class Game {
     private void startNewGame(){
 
         random = new Random();
-        secretNumber = random.nextInt(100)+1;
+        secretNumber = random.nextInt(range)+1;
         attempts = 0;
 
     }
 
     private void checkGuess(int guess){
         attempts++;
-//        if(guess <1 || guess > 100){
-//            resultLabel.setForeground(Color.RED);
-//            resultLabel.setText("Guessing Range is between 1-100");
-//            return;
-//        }
+        if(guess <1 || guess > range){
+            resultLabel.setForeground(Color.RED);
+            resultLabel.setText("Guessing Range is between 1-"+range);
+            return;
+        }
         if(guess < secretNumber){
             resultLabel.setForeground(Color.BLUE);
             resultLabel.setText("HIGHER~");
