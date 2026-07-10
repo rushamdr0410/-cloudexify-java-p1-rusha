@@ -11,6 +11,7 @@ public class Game {
 
     private JLabel resultLabel;
     private JTextField guessText;
+    private JButton guessButton;
 
     public Game(){
 //        startNewGame();
@@ -57,6 +58,10 @@ public class Game {
                 return;
             }
             startNewGame();
+            guessText.setText("");
+            resultLabel.setForeground(Color.BLACK);
+            resultLabel.setText("New Game Started!"+"\n"+"Guess between 1-"+range);
+            guessButton.setEnabled(true);
         });
         resultLabel = new JLabel("");
         resultLabel.setFont(new Font(resultLabel.getFont().getFontName(),Font.BOLD,16));
@@ -67,7 +72,8 @@ public class Game {
         guessText.setPreferredSize(new Dimension(100,30));
         guessText.setHorizontalAlignment(JTextField.CENTER);
         guessText.setMargin(new Insets(1, 5, 1, 5));
-        JButton guessButton = new JButton("Guess");
+        guessButton = new JButton("Guess");
+        guessButton.setEnabled(false);
         guessButton.setFont(new Font(guessButton.getFont().getFontName(),Font.BOLD,12));
         guessButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         guessButton.addActionListener(e -> {
