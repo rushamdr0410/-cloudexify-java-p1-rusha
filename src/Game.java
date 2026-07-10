@@ -8,19 +8,20 @@ public class Game {
     private int secretNumber;
     private int attempts;
     private int range;
+    private String currentDifficulty;
 
-    private JLabel resultLabel;
-    private JTextField guessText;
-    private JButton guessButton;
+    private final JLabel resultLabel;
+    private final JTextField guessText;
+    private final JButton guessButton;
     private final JRadioButton easyBtn;
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
-    private JLabel bestScoreLabel;
-    private boolean gameInProgress;
+    private final JLabel bestScoreLabel;
 
     private int bestEasy;
     private int bestMedium;
     private int bestHard;
+    private boolean gameInProgress;
 
     public Game(){
 //        startNewGame();
@@ -54,7 +55,7 @@ public class Game {
         buttonGroup.add(easyBtn);
         buttonGroup.add(mediumBtn);
         buttonGroup.add(hardBtn);
-        JButton startButton = getJButton();
+        JButton startButton = createStartButton();
         bestScoreLabel = new JLabel();
         resultLabel = new JLabel("");
         resultLabel.setFont(new Font(resultLabel.getFont().getFontName(),Font.BOLD,16));
@@ -108,7 +109,7 @@ public class Game {
 
     }
 
-    private JButton getJButton() {
+    private JButton createStartButton() {
         JButton startButton = new JButton("Start Game");
         startButton.addActionListener(e -> {
             if (gameInProgress){
@@ -118,12 +119,15 @@ public class Game {
             }
             if(easyBtn.isSelected()){
                 range=100;
+                currentDifficulty="Easy";
                 bestScoreLabel.setText("Best (Easy): " + (bestEasy == Integer.MAX_VALUE ? "None yet" : bestEasy));
             }else if(mediumBtn.isSelected()){
                 range=500;
+                currentDifficulty="Medium";
                 bestScoreLabel.setText("Best (Medium): " + (bestMedium == Integer.MAX_VALUE ? "None yet" : bestMedium));
             }else if(hardBtn.isSelected()){
                 range=1000;
+                currentDifficulty="Hard";
                 bestScoreLabel.setText("Best (Hard): " + (bestHard == Integer.MAX_VALUE ? "None yet" : bestHard));
             }else{
                 resultLabel.setForeground(Color.RED);
@@ -169,19 +173,19 @@ public class Game {
             resultLabel.setText("Yay! You Guessed it!");
             guessButton.setEnabled(false);
             guessText.setEnabled(false);
-            if (easyBtn.isSelected()){
+            if (currentDifficulty.equals("Easy")){
                 if(attempts < bestEasy){
                     bestEasy = attempts;
                     saveBestScores();
                     bestScoreLabel.setText("Best (Easy): " + bestEasy);
                 }
-            }else if(mediumBtn.isSelected()){
+            }else if(currentDifficulty.equals("Medium")){
                 if(attempts < bestMedium){
                     bestMedium = attempts;
                     saveBestScores();
                     bestScoreLabel.setText("Best (Medium): " + bestMedium);
                 }
-            } else if (hardBtn.isSelected()) {
+            } else if (currentDifficulty.equals("Hard")) {
                 if(attempts < bestHard){
                     bestHard = attempts;
                     saveBestScores();
