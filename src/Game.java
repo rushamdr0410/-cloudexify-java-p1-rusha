@@ -7,7 +7,6 @@ import java.util.Random;
 public class Game {
     private int secretNumber;
     private int attempts;
-    private Random random;
     private int range;
 
     private JLabel resultLabel;
@@ -72,6 +71,7 @@ public class Game {
             }
             startNewGame();
             guessText.setText("");
+            guessText.setEnabled(true);
             resultLabel.setForeground(Color.BLACK);
             resultLabel.setText("<html>New Game Started!<br>Guess between 1-" + range + "</html>");
             guessButton.setEnabled(true);
@@ -131,7 +131,7 @@ public class Game {
 
     private void startNewGame(){
 
-        random = new Random();
+        Random random = new Random();
         secretNumber = random.nextInt(range)+1;
         attempts = 0;
 
@@ -155,6 +155,8 @@ public class Game {
         else{
             resultLabel.setForeground(Color.GREEN);
             resultLabel.setText("Yay! You Guessed it!");
+            guessButton.setEnabled(false);
+            guessText.setEnabled(false);
             if (easyBtn.isSelected()){
                 if(attempts < bestEasy){
                     bestEasy = attempts;
