@@ -16,6 +16,7 @@ public class Game {
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
     private JLabel bestScoreLabel;
+    private boolean gameInProgress;
 
     private int bestEasy;
     private int bestMedium;
@@ -53,29 +54,7 @@ public class Game {
         buttonGroup.add(easyBtn);
         buttonGroup.add(mediumBtn);
         buttonGroup.add(hardBtn);
-        JButton startButton = new JButton("Start Game");
-        startButton.addActionListener(e -> {
-            if(easyBtn.isSelected()){
-                range=100;
-                bestScoreLabel.setText("Best (Easy): " + (bestEasy == Integer.MAX_VALUE ? "None yet" : bestEasy));
-            }else if(mediumBtn.isSelected()){
-                range=500;
-                bestScoreLabel.setText("Best (Medium): " + (bestMedium == Integer.MAX_VALUE ? "None yet" : bestMedium));
-            }else if(hardBtn.isSelected()){
-                range=1000;
-                bestScoreLabel.setText("Best (Hard): " + (bestHard == Integer.MAX_VALUE ? "None yet" : bestHard));
-            }else{
-                resultLabel.setForeground(Color.RED);
-                resultLabel.setText("You need to select difficulty level to start the game!");
-                return;
-            }
-            startNewGame();
-            guessText.setText("");
-            guessText.setEnabled(true);
-            resultLabel.setForeground(Color.BLACK);
-            resultLabel.setText("<html>New Game Started!<br>Guess between 1-" + range + "</html>");
-            guessButton.setEnabled(true);
-        });
+        JButton startButton = getJButton();
         bestScoreLabel = new JLabel();
         resultLabel = new JLabel("");
         resultLabel.setFont(new Font(resultLabel.getFont().getFontName(),Font.BOLD,16));
@@ -129,8 +108,40 @@ public class Game {
 
     }
 
-    private void startNewGame(){
+    private JButton getJButton() {
+        JButton startButton = new JButton("Start Game");
+        startButton.addActionListener(e -> {
+            if (gameInProgress){
+                resultLabel.setForeground(Color.RED);
+                resultLabel.setText("Finish Your Current Game First!");
+                return;
+            }
+            if(easyBtn.isSelected()){
+                range=100;
+                bestScoreLabel.setText("Best (Easy): " + (bestEasy == Integer.MAX_VALUE ? "None yet" : bestEasy));
+            }else if(mediumBtn.isSelected()){
+                range=500;
+                bestScoreLabel.setText("Best (Medium): " + (bestMedium == Integer.MAX_VALUE ? "None yet" : bestMedium));
+            }else if(hardBtn.isSelected()){
+                range=1000;
+                bestScoreLabel.setText("Best (Hard): " + (bestHard == Integer.MAX_VALUE ? "None yet" : bestHard));
+            }else{
+                resultLabel.setForeground(Color.RED);
+                resultLabel.setText("You need to select difficulty level to start the game!");
+                return;
+            }
+            startNewGame();
+            guessText.setText("");
+            guessText.setEnabled(true);
+            resultLabel.setForeground(Color.BLACK);
+            resultLabel.setText("<html>New Game Started!<br>Guess between 1-" + range + "</html>");
+            guessButton.setEnabled(true);
+        });
+        return startButton;
+    }
 
+    private void startNewGame(){
+        gameInProgress = true;
         Random random = new Random();
         secretNumber = random.nextInt(range)+1;
         attempts = 0;
@@ -153,6 +164,7 @@ public class Game {
             resultLabel.setText("LOWER~");
         }
         else{
+            gameInProgress = false;
             resultLabel.setForeground(Color.GREEN);
             resultLabel.setText("Yay! You Guessed it!");
             guessButton.setEnabled(false);
