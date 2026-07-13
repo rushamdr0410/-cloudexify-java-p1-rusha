@@ -113,9 +113,14 @@ public class Game {
         JButton startButton = new JButton("Start Game");
         startButton.addActionListener(e -> {
             if (gameInProgress){
-                resultLabel.setForeground(Color.RED);
-                resultLabel.setText("Finish Your Current Game First!");
-                return;
+                int choice = JOptionPane.showConfirmDialog(
+                        null,
+                        "Are you sure you want to restart?",
+                        "Confirm New Game",
+                        JOptionPane.YES_NO_OPTION
+                );
+                if (choice == JOptionPane.YES_OPTION){}
+                else {return;}
             }
             if(easyBtn.isSelected()){
                 range=100;
@@ -154,6 +159,7 @@ public class Game {
 
     private void checkGuess(int guess){
         attempts++;
+        guessText.setText("");
         if(guess <1 || guess > range){
             resultLabel.setForeground(Color.RED);
             resultLabel.setText("Guessing Range is between 1-"+range);
