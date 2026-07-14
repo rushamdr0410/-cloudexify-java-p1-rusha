@@ -57,6 +57,7 @@ public class Game {
         buttonGroup.add(hardBtn);
         JButton startButton = createStartButton();
         bestScoreLabel = new JLabel();
+        bestScoreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         resultLabel = new JLabel("");
         resultLabel.setFont(new Font(resultLabel.getFont().getFontName(),Font.BOLD,16));
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -80,7 +81,8 @@ public class Game {
                 resultLabel.setForeground(Color.RED);
                 resultLabel.setText("Invalid Guess!");
             }
-
+            guessText.setText("");
+            guessText.requestFocus();
         });
 
         panel.add(titleLabel);
@@ -89,8 +91,11 @@ public class Game {
         levelPanel.add(hardBtn);
         panel.add(levelPanel);
         panel.add(startButton);
+        panel.add(Box.createVerticalStrut(8));
         panel.add(bestScoreLabel);
+        panel.add(Box.createVerticalStrut(15));
         panel.add(resultLabel);
+        panel.add(Box.createVerticalStrut(15));
 
         inputPanel.add(messageLabel);
         inputPanel.add(guessText);
@@ -111,6 +116,7 @@ public class Game {
 
     private JButton createStartButton() {
         JButton startButton = new JButton("Start Game");
+        startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         startButton.addActionListener(e -> {
             if (gameInProgress){
                 int choice = JOptionPane.showConfirmDialog(
@@ -119,8 +125,9 @@ public class Game {
                         "Confirm New Game",
                         JOptionPane.YES_NO_OPTION
                 );
-                if (choice == JOptionPane.YES_OPTION){}
-                else {return;}
+                if (choice != JOptionPane.YES_OPTION){
+                    return;
+                }
             }
             if(easyBtn.isSelected()){
                 range=100;
@@ -141,9 +148,11 @@ public class Game {
             }
             startNewGame();
             guessText.setText("");
+            guessText.requestFocus();
             guessText.setEnabled(true);
             resultLabel.setForeground(Color.BLACK);
-            resultLabel.setText("<html>New Game Started!<br>Guess between 1-" + range + "</html>");
+            resultLabel.setText("<html><div style='text-align: center;'>New Game Started!<br>Guess between 1-" + range + "</div></html>");
+            resultLabel.setHorizontalAlignment(SwingConstants.CENTER);
             guessButton.setEnabled(true);
         });
         return startButton;
