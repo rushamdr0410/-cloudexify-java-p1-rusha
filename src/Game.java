@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -21,7 +22,9 @@ public class Game {
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
     private final JLabel bestScoreLabel;
-    private JLabel attemptsLabel;
+    private final JLabel attemptsLabel;
+    private DefaultTableModel leaderBoardModel;
+    private JTable leaderBoardTable;
 
     private List<ScoreEntry> easyScores = new ArrayList<>();
     private List<ScoreEntry> mediumScores = new ArrayList<>();
@@ -107,6 +110,14 @@ public class Game {
             guessText.setText("");
             guessText.requestFocus();
         });
+
+        String[] columnsNames = {"Rank", "Attempts"};
+        leaderBoardModel = new DefaultTableModel(columnsNames,0);
+        leaderBoardTable = new JTable(leaderBoardModel);
+        JScrollPane scrollPane = new JScrollPane(leaderBoardTable);
+        scrollPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+        scrollPane.setMaximumSize(new Dimension(500,500));
+        scrollPane.setPreferredSize(new Dimension(500,500));
 
         panel.add(titleLabel);
         levelPanel.add(easyBtn);
@@ -215,19 +226,6 @@ public class Game {
                 addScore(hardScores, attempts);
             }
             saveBestScores();
-            bestScoreLabel.setText(getBestScoreText(currentDifficulty,
-            if (currentDifficulty.equals("Easy")){
-                addScore(easyScores, attempts);
-                bestScoreLabel.setText(getBestScoreText("Easy", easyScores));
-            }else if(currentDifficulty.equals("Medium")){
-                addScore(mediumScores, attempts);
-                bestScoreLabel.setText(getBestScoreText("Medium", mediumScores));
-            } else if (currentDifficulty.equals("Hard")) {
-                addScore(hardScores, attempts);
-                bestScoreLabel.setText(getBestScoreText("Hard", hardScores));
-            }
-            saveBestScores();
-            ));
 
             int choice = JOptionPane.showConfirmDialog(null,
                     "Yay! You guessed it in " + attempts + " attempts! Play again?",
