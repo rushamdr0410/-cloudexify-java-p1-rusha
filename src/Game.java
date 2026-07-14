@@ -1,6 +1,10 @@
 import javax.swing.*;
 import java.awt.*;//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -17,19 +21,36 @@ public class Game {
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
     private final JLabel bestScoreLabel;
+    private JLabel attemptsLabel;
 
-    private int bestEasy;
-    private int bestMedium;
-    private int bestHard;
+    private List<ScoreEntry> easyScores = new ArrayList<>();
+    private List<ScoreEntry> mediumScores = new ArrayList<>();
+    private List<ScoreEntry> hardScores = new ArrayList<>();
     private boolean gameInProgress;
+    private int maxAttempts;
 
     public Game(){
 //        startNewGame();
         loadBestScores();
 
         JFrame frame = new JFrame("CloudExify Guessing Game");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e){
+                int choice = JOptionPane.showConfirmDialog(
+                        frame,
+                        "Are you sure you want to exit?",
+                        "Confirm Exit",
+                        JOptionPane.YES_NO_OPTION
+                );
+                if(choice == JOptionPane.YES_OPTION){
+                    System.exit(0);
+                }
+            }
+        });
         frame.setSize(300,400);
+        frame.setResizable(false);
         frame.setLayout(new GridLayout(1,1)); //BorderLayout or GridLayout(rows, cols) or FlowLayout
 
         JPanel panel = new JPanel();
@@ -63,6 +84,8 @@ public class Game {
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         JLabel messageLabel = new JLabel("Please enter your guess: ");
         messageLabel.setFont(new Font(messageLabel.getFont().getFontName(),Font.BOLD,12));
+        attemptsLabel = new JLabel("Attempts: 0");
+        attemptsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         guessText = new JTextField();
         guessText.setPreferredSize(new Dimension(100,30));
         guessText.setHorizontalAlignment(JTextField.CENTER);
@@ -98,6 +121,7 @@ public class Game {
         panel.add(Box.createVerticalStrut(15));
 
         inputPanel.add(messageLabel);
+        inputPanel.add(attemptsLabel);
         inputPanel.add(guessText);
         inputPanel.setMaximumSize(inputPanel.getPreferredSize());
         panel.add(inputPanel);
@@ -129,31 +153,7 @@ public class Game {
                     return;
                 }
             }
-            if(easyBtn.isSelected()){
-                range=100;
-                currentDifficulty="Easy";
-                bestScoreLabel.setText("Best (Easy): " + (bestEasy == Integer.MAX_VALUE ? "None yet" : bestEasy));
-            }else if(mediumBtn.isSelected()){
-                range=500;
-                currentDifficulty="Medium";
-                bestScoreLabel.setText("Best (Medium): " + (bestMedium == Integer.MAX_VALUE ? "None yet" : bestMedium));
-            }else if(hardBtn.isSelected()){
-                range=1000;
-                currentDifficulty="Hard";
-                bestScoreLabel.setText("Best (Hard): " + (bestHard == Integer.MAX_VALUE ? "None yet" : bestHard));
-            }else{
-                resultLabel.setForeground(Color.RED);
-                resultLabel.setText("You need to select difficulty level to start the game!");
-                return;
-            }
-            startNewGame();
-            guessText.setText("");
-            guessText.requestFocus();
-            guessText.setEnabled(true);
-            resultLabel.setForeground(Color.BLACK);
-            resultLabel.setText("<html><div style='text-align: center;'>New Game Started!<br>Guess between 1-" + range + "</div></html>");
-            resultLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            guessButton.setEnabled(true);
+            beginRound();
         });
         return startButton;
     }
@@ -166,9 +166,27 @@ public class Game {
 
     }
 
+    private String getBestScoreText(String label, List<ScoreEntry> scoreList) {
+        if (scoreList.isEmpty()){
+            return "Best("+label+"):None Yet";
+        }
+        return "Best("+label+"):"+scoreList.getFirst().attempts;
+    }
+
     private void checkGuess(int guess){
         attempts++;
+        attemptsLabel.setText("Attempts: " + attempts);
         guessText.setText("");
+
+        if (attempts >= maxAttempts) {
+            resultLabel.setForeground(Color.RED);
+            resultLabel.setText("Game Over! The number was " + secretNumber);
+            guessButton.setEnabled(false);
+            guessText.setEnabled(false);
+            gameInProgress = false;
+            return;
+        }
+
         if(guess <1 || guess > range){
             resultLabel.setForeground(Color.RED);
             resultLabel.setText("Guessing Range is between 1-"+range);
@@ -188,56 +206,136 @@ public class Game {
             resultLabel.setText("Yay! You Guessed it!");
             guessButton.setEnabled(false);
             guessText.setEnabled(false);
+
             if (currentDifficulty.equals("Easy")){
-                if(attempts < bestEasy){
-                    bestEasy = attempts;
-                    saveBestScores();
-                    bestScoreLabel.setText("Best (Easy): " + bestEasy);
-                }
+                addScore(easyScores, attempts);
             }else if(currentDifficulty.equals("Medium")){
-                if(attempts < bestMedium){
-                    bestMedium = attempts;
-                    saveBestScores();
-                    bestScoreLabel.setText("Best (Medium): " + bestMedium);
-                }
+                addScore(mediumScores, attempts);
             } else if (currentDifficulty.equals("Hard")) {
-                if(attempts < bestHard){
-                    bestHard = attempts;
-                    saveBestScores();
-                    bestScoreLabel.setText("Best (Hard): " + bestHard);
-                }
+                addScore(hardScores, attempts);
+            }
+            saveBestScores();
+            bestScoreLabel.setText(getBestScoreText(currentDifficulty,
+            if (currentDifficulty.equals("Easy")){
+                addScore(easyScores, attempts);
+                bestScoreLabel.setText(getBestScoreText("Easy", easyScores));
+            }else if(currentDifficulty.equals("Medium")){
+                addScore(mediumScores, attempts);
+                bestScoreLabel.setText(getBestScoreText("Medium", mediumScores));
+            } else if (currentDifficulty.equals("Hard")) {
+                addScore(hardScores, attempts);
+                bestScoreLabel.setText(getBestScoreText("Hard", hardScores));
+            }
+            saveBestScores();
+            ));
+
+            int choice = JOptionPane.showConfirmDialog(null,
+                    "Yay! You guessed it in " + attempts + " attempts! Play again?",
+                    "Game Over",
+                    JOptionPane.YES_NO_OPTION
+            );
+            if (choice == JOptionPane.YES_OPTION) {
+                beginRound();
             }
         }
 
     }
 
+    private void beginRound() {
+        if(easyBtn.isSelected()){
+            range = 100;
+            maxAttempts = 10;
+            currentDifficulty = "Easy";
+            bestScoreLabel.setText(getBestScoreText("Easy", easyScores));
+        }else if(mediumBtn.isSelected()){
+            range = 500;
+            maxAttempts = 15;
+            currentDifficulty = "Medium";
+            bestScoreLabel.setText(getBestScoreText("Medium", mediumScores));
+        }else if(hardBtn.isSelected()){
+            range = 1000;
+            maxAttempts = 20;
+            currentDifficulty = "Hard";
+            bestScoreLabel.setText(getBestScoreText("Hard", hardScores));
+        }else{
+            resultLabel.setForeground(Color.RED);
+            resultLabel.setText("You need to select difficulty level to start the game!");
+            return;
+        }
+        startNewGame();
+        guessText.setText("");
+        guessText.requestFocus();
+        guessText.setEnabled(true);
+        resultLabel.setForeground(Color.BLACK);
+        resultLabel.setText("<html><div style='text-align: center;'>New Game Started!<br>Guess between 1-" + range + "</div></html>");
+        resultLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        guessButton.setEnabled(true);
+    }
+
+    private static class ScoreEntry{
+        int attempts;
+        ScoreEntry(int attempts){
+            this.attempts = attempts;
+        }
+    }
+
+    private void addScore(List<ScoreEntry> scoreList, int attempts) {
+        scoreList.add(new ScoreEntry(attempts));
+        scoreList.sort((a, b) -> a.attempts - b.attempts);
+        if (scoreList.size() > 5) {
+            scoreList.removeLast();
+        }
+    }
+
     private void loadBestScores(){
         try{
             BufferedReader reader = new BufferedReader(new FileReader("bestscore.txt"));
-            bestEasy = Integer.parseInt(reader.readLine());
-            bestMedium = Integer.parseInt(reader.readLine());
-            bestHard = Integer.parseInt(reader.readLine());
+            easyScores = lineToScores(reader.readLine());
+            mediumScores = lineToScores(reader.readLine());
+            hardScores = lineToScores(reader.readLine());
             reader.close();
         }catch (IOException ex){
-            bestEasy = Integer.MAX_VALUE;
-            bestMedium = Integer.MAX_VALUE;
-            bestHard = Integer.MAX_VALUE;
+            easyScores = new ArrayList<>();
+            mediumScores = new ArrayList<>();
+            hardScores = new ArrayList<>();
         }
+    }
+
+    private List<ScoreEntry> lineToScores(String line){
+        List<ScoreEntry> list = new ArrayList<>();
+        if (line == null || line.isEmpty()){
+            return list;
+        }
+        String[] parts = line.split(",");
+        for (String part : parts) {
+            list.add(new ScoreEntry(Integer.parseInt(part)));
+        }
+        return list;
     }
 
     private void saveBestScores(){
         try{
             FileWriter writer = new FileWriter("bestscore.txt");
-            writer.write(bestEasy+"\n");
-            writer.write(bestMedium+"\n");
-            writer.write(bestHard+"\n");
+            writer.write(scoresToLine(easyScores) + "\n");
+            writer.write(scoresToLine(mediumScores) + "\n");
+            writer.write(scoresToLine(hardScores) + "\n");
             writer.close();
         } catch (IOException e) {
             resultLabel.setText("Error saving score!");
         }
     }
 
+    private String scoresToLine(List<ScoreEntry> scoreList){
+        StringBuilder sb = new StringBuilder();
+        for (ScoreEntry entry : scoreList){
+            sb.append(entry.attempts).append(",");
+        }
+        return sb.toString();
+    }
+
     public static void main(String[] args) {
-        new Game();
+        SwingUtilities.invokeLater(()->{
+            new Game();
+        });
     }
 }
