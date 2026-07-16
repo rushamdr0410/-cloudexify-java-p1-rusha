@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Game {
     private int secretNumber;
     private int attempts;
