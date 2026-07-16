@@ -108,16 +108,6 @@ The file is created automatically the first time you win a game.
 
 ---
 
-## Screenshots
-
-| | |
-|---|---|
-| ![Initialization](Screenshots/Initialization.png) | ![Game Start](Screenshots/GameStart.png) |
-| ![Easy – Correct Guess](Screenshots/Easy-Correct%20Guess.png) | ![Hard – Guessed above Range](Screenshots/Hard-Guessed%20above%20Range.png) |
-| ![Exit Confirmation](Screenshots/Exit%20Confirmation.png) | |
-
----
-
 ## How It Works
 
 The whole game lives in a single class, `Game`:
