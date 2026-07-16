@@ -246,6 +246,7 @@ public class Game {
     private void startNewGame(){
         previousDistance = -1;
         gameInProgress = true;
+        attempts = 0;
         Random random = new Random();
         secretNumber = random.nextInt(range)+1;
         attemptBar.setMaximum(maxAttempts);
@@ -266,41 +267,13 @@ public class Game {
         attemptBar.setLabelText("Attempts: " + attempts + "/" + maxAttempts);
         guessText.setText("");
 
-        if (attempts >= maxAttempts) {
-            resultLabel.setForeground(Color.RED);
-            resultLabel.setText("Game Over! The number was " + secretNumber);
-            guessButton.setEnabled(false);
-            guessText.setEnabled(false);
-            gameInProgress = false;
-            return;
-        }
-
         if(guess <1 || guess > range){
             resultLabel.setForeground(Color.RED);
             resultLabel.setText("Guessing Range is between 1-"+range);
             return;
         }
-        if(guess < secretNumber){
-            resultLabel.setForeground(Color.BLUE);
-            int currentDistance = Math.abs(guess - secretNumber);
-            String tempText = "HIGHER~";
-            if (previousDistance != -1) {
-                tempText += (currentDistance < previousDistance) ? " (Warmer)" : " (Colder)";
-            }
-            resultLabel.setText(tempText);
-            previousDistance = currentDistance;
-        }
-        else if(guess > secretNumber){
-            resultLabel.setForeground(Color.BLUE);
-            int currentDistance = Math.abs(guess - secretNumber);
-            String tempText = "LOWER~";
-            if (previousDistance != -1) {
-                tempText += (currentDistance < previousDistance) ? " (Warmer)" : " (Colder)";
-            }
-            resultLabel.setText(tempText);
-            previousDistance = currentDistance;
-        }
-        else{
+
+        if (guess == secretNumber) {
             gameInProgress = false;
             resultLabel.setForeground(Color.GREEN);
             resultLabel.setText("Yay! You Guessed it!");
@@ -326,8 +299,38 @@ public class Game {
             }else {
                 System.exit(0);
             }
+            return;
         }
 
+        if (attempts >= maxAttempts) {
+            resultLabel.setForeground(Color.RED);
+            resultLabel.setText("Game Over! The number was " + secretNumber);
+            guessButton.setEnabled(false);
+            guessText.setEnabled(false);
+            gameInProgress = false;
+            return;
+        }
+
+        if(guess < secretNumber){
+            resultLabel.setForeground(Color.BLUE);
+            int currentDistance = Math.abs(guess - secretNumber);
+            String tempText = "HIGHER~";
+            if (previousDistance != -1) {
+                tempText += (currentDistance < previousDistance) ? " (Warmer)" : " (Colder)";
+            }
+            resultLabel.setText(tempText);
+            previousDistance = currentDistance;
+        }
+        else{
+            resultLabel.setForeground(Color.BLUE);
+            int currentDistance = Math.abs(guess - secretNumber);
+            String tempText = "LOWER~";
+            if (previousDistance != -1) {
+                tempText += (currentDistance < previousDistance) ? " (Warmer)" : " (Colder)";
+            }
+            resultLabel.setText(tempText);
+            previousDistance = currentDistance;
+        }
     }
 
     private void beginRound() {
