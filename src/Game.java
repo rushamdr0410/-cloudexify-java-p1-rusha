@@ -1,6 +1,7 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -14,6 +15,7 @@ public class Game {
     private int attempts;
     private int range;
     private String currentDifficulty;
+    private int previousDistance = -1;
 
     private final JLabel resultLabel;
     private final JTextField guessText;
@@ -22,15 +24,70 @@ public class Game {
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
     private final JLabel bestScoreLabel;
-    private final JLabel attemptsLabel;
-    private DefaultTableModel leaderBoardModel;
-    private JTable leaderBoardTable;
+    private final AttemptBar attemptBar;
+    private final DefaultTableModel leaderBoardModel;
 
     private List<ScoreEntry> easyScores = new ArrayList<>();
     private List<ScoreEntry> mediumScores = new ArrayList<>();
     private List<ScoreEntry> hardScores = new ArrayList<>();
     private boolean gameInProgress;
     private int maxAttempts;
+
+    private static class AttemptBar extends JPanel {
+        private int value = 0;
+        private int max = 1;
+        private String label = "";
+
+        AttemptBar() {
+            setPreferredSize(new Dimension(200, 25));
+            setMaximumSize(new Dimension(200, 25));
+        }
+
+        void setValue(int value) {
+            this.value = value;
+            repaint();
+        }
+
+        void setMaximum(int max) {
+            this.max = max;
+            repaint();
+        }
+
+        void setLabelText(String label) {
+            this.label = label;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            int width = getWidth();
+            int height = getHeight();
+
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, width, height);
+
+            double percent = (max == 0) ? 0 : (double) value / max;
+            int fillWidth = (int) (width * percent);
+
+            Color fillColor;
+            if (percent >= 0.8) fillColor = Color.RED;
+            else if (percent >= 0.5) fillColor = Color.YELLOW;
+            else fillColor = Color.GREEN;
+
+            g.setColor(fillColor);
+            g.fillRect(0, 0, fillWidth, height);
+
+            g.setColor(Color.BLACK);
+            g.drawRect(0, 0, width - 1, height - 1);
+
+            FontMetrics fm = g.getFontMetrics();
+            int textWidth = fm.stringWidth(label);
+            int textX = (width - textWidth) / 2;
+            int textY = (height + fm.getAscent()) / 2 - 2;
+            g.drawString(label, textX, textY);
+        }
+    }
 
     public Game(){
 //        startNewGame();
@@ -52,7 +109,7 @@ public class Game {
                 }
             }
         });
-        frame.setSize(300,400);
+        frame.setSize(300,500);
         frame.setResizable(false);
         frame.setLayout(new GridLayout(1,1)); //BorderLayout or GridLayout(rows, cols) or FlowLayout
 
@@ -87,12 +144,13 @@ public class Game {
         resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         JLabel messageLabel = new JLabel("Please enter your guess: ");
         messageLabel.setFont(new Font(messageLabel.getFont().getFontName(),Font.BOLD,12));
-        attemptsLabel = new JLabel("Attempts: 0");
-        attemptsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        attemptBar = new AttemptBar();
+        attemptBar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        attemptBar.setLabelText("Attempts: 0/" + maxAttempts);
         guessText = new JTextField();
-        guessText.setPreferredSize(new Dimension(100,30));
+        guessText.setPreferredSize(new Dimension(100, 35));
+        guessText.setMargin(new Insets(5, 5, 5, 5));
         guessText.setHorizontalAlignment(JTextField.CENTER);
-        guessText.setMargin(new Insets(1, 5, 1, 5));
         guessButton = new JButton("Guess");
         guessButton.setEnabled(false);
         guessButton.setFont(new Font(guessButton.getFont().getFontName(),Font.BOLD,12));
@@ -113,11 +171,15 @@ public class Game {
 
         String[] columnsNames = {"Rank", "Attempts"};
         leaderBoardModel = new DefaultTableModel(columnsNames,0);
-        leaderBoardTable = new JTable(leaderBoardModel);
+        JTable leaderBoardTable = new JTable(leaderBoardModel);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        leaderBoardTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        leaderBoardTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
         JScrollPane scrollPane = new JScrollPane(leaderBoardTable);
         scrollPane.setAlignmentX(Component.CENTER_ALIGNMENT);
-        scrollPane.setMaximumSize(new Dimension(500,500));
-        scrollPane.setPreferredSize(new Dimension(500,500));
+        scrollPane.setMaximumSize(new Dimension(250,120));
+        scrollPane.setPreferredSize(new Dimension(250,120));
 
         panel.add(titleLabel);
         levelPanel.add(easyBtn);
@@ -132,13 +194,16 @@ public class Game {
         panel.add(Box.createVerticalStrut(15));
 
         inputPanel.add(messageLabel);
-        inputPanel.add(attemptsLabel);
         inputPanel.add(guessText);
         inputPanel.setMaximumSize(inputPanel.getPreferredSize());
         panel.add(inputPanel);
         panel.add(Box.createRigidArea(new Dimension(0,10)));
-
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(attemptBar);
+        panel.add(Box.createVerticalStrut(10));
         panel.add(guessButton);
+        panel.add(Box.createVerticalStrut(15));
+        panel.add(scrollPane);
 
 
         panel.add(Box.createVerticalGlue());
@@ -147,6 +212,15 @@ public class Game {
 
         frame.setVisible(true);
 
+    }
+
+    private void refreshLeaderboard(List<ScoreEntry> scoreList) {
+        leaderBoardModel.setRowCount(0);
+        int rank = 1;
+        for (ScoreEntry entry : scoreList) {
+            leaderBoardModel.addRow(new Object[]{rank, entry.attempts});
+            rank++;
+        }
     }
 
     private JButton createStartButton() {
@@ -170,11 +244,13 @@ public class Game {
     }
 
     private void startNewGame(){
+        previousDistance = -1;
         gameInProgress = true;
         Random random = new Random();
         secretNumber = random.nextInt(range)+1;
-        attempts = 0;
-
+        attemptBar.setMaximum(maxAttempts);
+        attemptBar.setValue(0);
+        attemptBar.setLabelText("Attempts: 0/" + maxAttempts);
     }
 
     private String getBestScoreText(String label, List<ScoreEntry> scoreList) {
@@ -186,7 +262,8 @@ public class Game {
 
     private void checkGuess(int guess){
         attempts++;
-        attemptsLabel.setText("Attempts: " + attempts);
+        attemptBar.setValue(attempts);
+        attemptBar.setLabelText("Attempts: " + attempts + "/" + maxAttempts);
         guessText.setText("");
 
         if (attempts >= maxAttempts) {
@@ -205,11 +282,23 @@ public class Game {
         }
         if(guess < secretNumber){
             resultLabel.setForeground(Color.BLUE);
-            resultLabel.setText("HIGHER~");
+            int currentDistance = Math.abs(guess - secretNumber);
+            String tempText = "HIGHER~";
+            if (previousDistance != -1) {
+                tempText += (currentDistance < previousDistance) ? " (Warmer)" : " (Colder)";
+            }
+            resultLabel.setText(tempText);
+            previousDistance = currentDistance;
         }
         else if(guess > secretNumber){
             resultLabel.setForeground(Color.BLUE);
-            resultLabel.setText("LOWER~");
+            int currentDistance = Math.abs(guess - secretNumber);
+            String tempText = "LOWER~";
+            if (previousDistance != -1) {
+                tempText += (currentDistance < previousDistance) ? " (Warmer)" : " (Colder)";
+            }
+            resultLabel.setText(tempText);
+            previousDistance = currentDistance;
         }
         else{
             gameInProgress = false;
@@ -234,6 +323,8 @@ public class Game {
             );
             if (choice == JOptionPane.YES_OPTION) {
                 beginRound();
+            }else {
+                System.exit(0);
             }
         }
 
@@ -245,16 +336,19 @@ public class Game {
             maxAttempts = 10;
             currentDifficulty = "Easy";
             bestScoreLabel.setText(getBestScoreText("Easy", easyScores));
+            refreshLeaderboard(easyScores);
         }else if(mediumBtn.isSelected()){
             range = 500;
             maxAttempts = 15;
             currentDifficulty = "Medium";
             bestScoreLabel.setText(getBestScoreText("Medium", mediumScores));
+            refreshLeaderboard(mediumScores);
         }else if(hardBtn.isSelected()){
             range = 1000;
             maxAttempts = 20;
             currentDifficulty = "Hard";
             bestScoreLabel.setText(getBestScoreText("Hard", hardScores));
+            refreshLeaderboard(hardScores);
         }else{
             resultLabel.setForeground(Color.RED);
             resultLabel.setText("You need to select difficulty level to start the game!");
